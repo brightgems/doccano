@@ -60,6 +60,8 @@ INSTALLED_APPS = [
     'social_django',
     'polymorphic',
     'webpack_loader',
+    'corsheaders',
+    'drf_yasg'
 ]
 
 CLOUD_BROWSER_APACHE_LIBCLOUD_PROVIDER = env('CLOUD_BROWSER_LIBCLOUD_PROVIDER', None)
@@ -82,6 +84,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'applicationinsights.django.ApplicationInsightsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'app.urls'
@@ -305,3 +308,11 @@ EMAIL_PORT = env.int('EMAIL_PORT', 587)
 
 if not EMAIL_HOST:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+if DEBUG:
+    CORS_ORIGIN_WHITELIST = (
+        'http://127.0.0.1:3000',
+        'http://0.0.0.0:3000',
+        'http://localhost:3000'
+    )
