@@ -32,9 +32,7 @@
 </template>
 
 <script>
-import HorizontalBar from 'vue-chartjs/es/BaseCharts/HorizontalBar';
-import Doughnut from 'vue-chartjs/es/BaseCharts/Doughnut';
-import reactiveProp from 'vue-chartjs/es/mixins/reactiveProp';
+import { HorizontalBar, Doughnut, reactiveProp } from 'vue-chartjs';
 import HTTP from './http';
 
 const LineChart = {
