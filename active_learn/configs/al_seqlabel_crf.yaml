@@ -1,0 +1,21 @@
+cuda_devices: ''
+hydra:
+  run:
+    dir: ${output_dir}/al_exp_crf/${now:%Y-%m-%d}/${now:%H-%M-%S}
+model:
+    model_type: 'crf'
+    spacy_model: 'zh_core_md'
+data:
+    data_folder: '${output_dir}/data/'
+    task: 'conll2003'
+    tag_column: 3
+    document_separator: true
+al:
+    strat_name: 'uncertainty'
+    n_iterations: 10
+    max_samples_number: 50
+    percent: false    
+n_repeats: 1
+n_processes: 2
+exp_path: '${output_dir}/experiments/hydra_debug'
+cache_dir: '${output_dir}/cache'

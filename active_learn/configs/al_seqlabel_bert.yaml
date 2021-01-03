@@ -1,0 +1,35 @@
+cuda_devices: ''
+name: 'conll'
+hydra:
+  run:
+    dir: ${work_dir}/al_exp_bert/${now:%Y-%m-%d}/${now:%H-%M-%S}
+model:
+    model_type: 'transformers'
+    tokenizer: 'bert-base-cased'
+    classifier: 'bert-base-cased'
+    patience: 2
+    n_epochs: 10
+    lr: 5e-5
+    bs: 64
+    ebs: 64
+    min_lr: 1.25e-5
+    valid_ratio: 0.25
+    anneal_factor: 0.5
+    bayes: True
+    bayes_type: 'mcd_all_layers'
+    cache_dir: '${work_dir}/cache'
+    smallest_lr: 1e-7
+data:
+    data_folder: '${work_dir}/data/'
+    task: 'conll2003'
+    tag_column: 3
+    document_separator: true
+al:
+    strat_name: 'uncertainty'
+    n_iterations: 50
+    max_samples_number: 100
+    percent: False
+n_repeats: 5
+n_processes: 2
+exp_path: '../workdir/experiments/hydra_debug'
+cache_dir: '../workdir/cache'

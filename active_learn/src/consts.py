@@ -1,0 +1,1 @@
+NEW_LINE_CHAR = '\uFFF8'
