@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -6,9 +7,10 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 from rest_framework.exceptions import ValidationError
 
 
-from .models import Label, Project, Document, RoleMapping, Role
+from .models import Label, Project, Document, RoleMapping, Role, Comment
 from .models import TextClassificationProject, SequenceLabelingProject, Seq2seqProject, Speech2textProject
 from .models import DocumentAnnotation, SequenceAnnotation, Seq2seqAnnotation, Speech2textAnnotation
+from .models import ModelProject, ModelBackend
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -59,9 +61,25 @@ class LabelSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'prefix_key', 'suffix_key', 'background_color', 'text_color')
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
+
+    @classmethod
+    def get_username(cls, instance):
+        user = instance.user
+        return user.username if user else None
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'user', 'username','updated_at')
+        read_only_fields = ('user', 'document')
+
+
 class DocumentSerializer(serializers.ModelSerializer):
     annotations = serializers.SerializerMethodField()
     annotation_approver = serializers.SerializerMethodField()
+    annotation_assign_to = serializers.SerializerMethodField()
+    comments = CommentSerializer(many=True, read_only=True)
 
     def get_annotations(self, instance):
         request = self.context.get('request')
@@ -79,10 +97,19 @@ class DocumentSerializer(serializers.ModelSerializer):
         approver = instance.annotations_approved_by
         return approver.username if approver else None
 
+    @classmethod
+    def get_annotation_assign_to(cls, instance):
+        assign_to = instance.annotations_assign_to
+        return assign_to.username if assign_to else None
+
     class Meta:
         model = Document
-        fields = ('id', 'text', 'annotations', 'meta', 'annotation_approver')
+        fields = ('id', 'text', 'annotations', 'meta', 'annotation_approver','annotation_assign_to','comments')
 
+class DocumentAssignToSerializer(serializers.Serializer):
+    users = serializers.ListField(
+        child=serializers.IntegerField()
+        )
 
 class ProjectSerializer(serializers.ModelSerializer):
     current_users_role = serializers.SerializerMethodField()
@@ -226,3 +253,20 @@ class RoleMappingSerializer(serializers.ModelSerializer):
     class Meta:
         model = RoleMapping
         fields = ('id', 'user', 'role', 'username', 'rolename')
+
+
+class ActiveLearningModelProjectSerializer(serializers.ModelSerializer):
+    model_backend = serializers.PrimaryKeyRelatedField(queryset=ModelBackend.objects.all())
+    target_project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
+    class Meta:
+        model = ModelProject
+        fields = ('id', 'name', 'description', 'model_type', 'model_backend', 'target_project','predict_labels','backend_parameters','model_version')
+        extra_kwargs = {
+            'model_version':{'required':False, 'allow_blank': True}
+        }
+
+        
+class ActiveLearningModelBackendSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ModelBackend
+        fields = ('id', 'name', 'model_type')

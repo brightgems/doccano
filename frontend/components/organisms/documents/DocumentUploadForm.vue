@@ -46,6 +46,8 @@
           :rules="uploadFileRules"
           label="File input"
         />
+        <h2>Options</h2>
+        <v-switch v-model="ignore_existing" class="ma-2" label="Bypass document when text existed" />
       </v-form>
     </template>
   </base-card>
@@ -78,6 +80,7 @@ export default {
       selectedFormat: null,
       fileFormatRules,
       uploadFileRules,
+      ignore_existing: true,
       showError: false
     }
   },
@@ -107,7 +110,8 @@ export default {
         this.uploadDocument({
           projectId: this.$route.params.id,
           format: this.selectedFormat.type,
-          file: this.file
+          file: this.file,
+          ignore_existing: this.ignore_existing
         })
           .then((response) => {
             this.reset()

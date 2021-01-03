@@ -12,9 +12,10 @@
             <v-icon>
               mdi-filter
             </v-icon>
+            Done
           </v-btn>
         </template>
-        <span>Select a filter</span>
+        <span>Done</span>
       </v-tooltip>
     </template>
     <v-list>

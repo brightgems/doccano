@@ -486,12 +486,23 @@ class TestDocumentListAPI(APITestCase, TestUtilsMixin):
 
         mommy.make('DocumentAnnotation', document=doc1, user=project_member)
         mommy.make('DocumentAnnotation', document=doc2, user=project_member)
+        
 
     def _test_list(self, url, username, password, expected_num_results):
         self.client.login(username=username, password=password)
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json().get('results')), expected_num_results)
+
+    
+    def test_assign_document_to_members(self):
+        self.client.login(username=self.super_user_name, password=self.super_user_pass)
+        url = reverse(viewname='doc_assign_to', args=[self.main_project.id])
+        users = [u.id for u in self.main_project.users.all()]
+        response = self.client.post(url,{'users':users})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        prj_user_num_docs= Document.objects.filter(annotations_assign_to__username=self.project_member_name).count()
+        self.assertEqual(prj_user_num_docs,1)
 
     def test_returns_docs_to_project_member(self):
         self._test_list(self.url,
@@ -1123,9 +1134,9 @@ class TestUploader(APITestCase):
 
     def upload_test_helper(self, project_id, filename, file_format, expected_status, **kwargs):
         url = reverse(viewname='doc_uploader', args=[project_id])
-
         with open(os.path.join(DATA_DIR, filename), 'rb') as f:
-            response = self.client.post(url, data={'file': f, 'format': file_format})
+            kwargs.update({'file': f, 'format': file_format})
+            response = self.client.post(url, data=kwargs)
 
         self.assertEqual(response.status_code, expected_status)
 
@@ -1194,6 +1205,19 @@ class TestUploader(APITestCase):
                                 filename='example_one_column.csv',
                                 file_format='csv',
                                 expected_status=status.HTTP_201_CREATED)
+
+    def test_can_upload_with_ignore_existing(self):
+        self.upload_test_helper(project_id=self.seq2seq_project.id,
+                                filename='example_one_column.csv',
+                                file_format='csv',
+                                expected_status=status.HTTP_201_CREATED)
+        doc_num=Document.objects.count()    
+        self.upload_test_helper(project_id=self.seq2seq_project.id,
+                                filename='example_one_column.csv',
+                                file_format='csv',
+                                expected_status=status.HTTP_201_CREATED,
+                                ignore_existing=True)
+        self.assertEqual(doc_num, Document.objects.count())
 
     def test_cannot_upload_csv_file_does_not_match_column_and_row(self):
         self.upload_test_helper(project_id=self.classification_project.id,
@@ -1747,3 +1771,90 @@ class TestRoleMappingDetailAPI(APITestCase):
                           password=self.project_member_pass)
         response = self.client.delete(self.url, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+class TestCommentListAPI(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.project_member_name = 'project_member_name'
+        cls.project_member_pass = 'project_member_pass'
+        cls.another_project_member_name = 'another_project_member_name'
+        cls.another_project_member_pass = 'another_project_member_pass'
+        cls.non_project_member_name = 'non_project_member_name'
+        cls.non_project_member_pass = 'non_project_member_pass'
+        create_default_roles()
+        cls.project_member = User.objects.create_user(username=cls.project_member_name,
+                                                      password=cls.project_member_pass)
+        another_project_member = User.objects.create_user(username=cls.another_project_member_name,
+                                                          password=cls.another_project_member_pass)
+        User.objects.create_user(username=cls.non_project_member_name, password=cls.non_project_member_pass)
+
+        main_project = mommy.make('SequenceLabelingProject', users=[cls.project_member, another_project_member])
+        main_project_doc = mommy.make('Document', project=main_project)
+        cls.comment = mommy.make('Comment', document=main_project_doc, text='comment 1', user=cls.project_member)
+        mommy.make('Comment', document=main_project_doc, text='comment 2', user=cls.project_member)
+        mommy.make('Comment', document=main_project_doc, text='comment 3', user=another_project_member)
+
+        cls.url = reverse(viewname='comment_list', args=[main_project.id, main_project_doc.id])
+
+        assign_user_to_role(project_member=cls.project_member, project=main_project,
+                            role_name=settings.ROLE_ANNOTATOR)
+        assign_user_to_role(project_member=another_project_member, project=main_project,
+                            role_name=settings.ROLE_ANNOTATOR)
+
+    def test_returns_own_comments_to_project_member(self):
+        self.client.login(username=self.project_member_name,
+                          password=self.project_member_pass)
+        response = self.client.get(self.url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+
+        self.client.login(username=self.another_project_member_name,
+                          password=self.another_project_member_pass)
+        response = self.client.get(self.url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+
+    def test_does_not_return_comments_to_non_project_member(self):
+        self.client.login(username=self.non_project_member_name,
+                          password=self.non_project_member_pass)
+        response = self.client.get(self.url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_does_not_allow_deletion_by_non_project_member(self):
+        self.client.login(username=self.non_project_member_name,
+                          password=self.non_project_member_pass)
+        response = self.client.delete('{}/{}'.format(self.url, self.comment.id), format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_does_not_allow_deletion_of_non_owned_comment(self):
+        self.client.login(username=self.another_project_member_name,
+                          password=self.another_project_member_pass)
+        response = self.client.delete('{}/{}'.format(self.url, self.comment.id), format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_update_delete_comment(self):
+        self.client.login(username=self.project_member_name,
+                          password=self.project_member_pass)
+        response = self.client.post(self.url, format='json', data={'text': 'comment'})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['user'], self.project_member.id)
+        self.assertEqual(response.data['text'], 'comment')
+        url = '{}/{}'.format(self.url, response.data['id'])
+
+        response = self.client.get(self.url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 3)
+
+        response = self.client.patch(url, format='json', data={'text': 'new comment'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK,response.data)
+        self.assertEqual(response.data['text'], 'new comment')
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        response = self.client.get(self.url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+
+    @classmethod
+    def doCleanups(cls):
+        remove_all_role_mappings()

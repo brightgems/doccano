@@ -23,7 +23,6 @@
       <span>Guideline</span>
       <v-icon>mdi-book-open-outline</v-icon>
     </v-btn> -->
-
     <v-btn @click="nextPage(total)">
       <span>Next</span>
       <v-icon>mdi-chevron-right</v-icon>

@@ -4,6 +4,7 @@
     v-shortkey="multiKeys"
     @shortkey="addOrRemoveLabel"
   >
+    <edit-text-button />
     <v-card-title>
       <multi-class-classification
         :labels="items"
@@ -22,11 +23,13 @@
 import Vue from 'vue'
 import { mapActions, mapGetters, mapState } from 'vuex'
 import MultiClassClassification from '@/components/organisms/annotation/MultiClassClassification'
+import EditTextButton from '~/components/containers/annotation/EditTextButton'
+
 Vue.use(require('vue-shortkey'))
 
 export default {
   components: {
-    MultiClassClassification
+    MultiClassClassification, EditTextButton
   },
 
   computed: {

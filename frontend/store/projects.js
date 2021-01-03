@@ -17,6 +17,13 @@ export const getters = {
   getCurrentUserRole(state) {
     return state.current.current_users_role || {}
   },
+  getProjectTypes(state) {
+    return [
+      { name: 'Text Classification', id: 'DocumentClassification' },
+      { name: 'Sequence Labeling', id: 'SequenceLabeling' },
+      { name: 'Sequence to sequence', id: 'Seq2seq' }
+    ]
+  },
   getFilterOption(state) {
     if (state.current.project_type === 'DocumentClassification') {
       return 'doc_annotations__isnull'

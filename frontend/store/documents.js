@@ -1,4 +1,5 @@
 import DocumentService from '@/services/document.service'
+import ProjectService from '@/services/project.service'
 import AnnotationService from '@/services/annotation.service'
 
 export const state = () => ({
@@ -12,7 +13,8 @@ export const state = () => ({
     offset: 0,
     q: '',
     isChecked: '',
-    filterName: ''
+    filterName: '',
+    assignedTo: ''
   }
 })
 
@@ -45,6 +47,9 @@ export const mutations = {
   deleteDocument(state, documentId) {
     state.items = state.items.filter(item => item.id !== documentId)
   },
+  cleanDocuments(state, projectId) {
+    state.items = []
+  },
   updateSelected(state, selected) {
     state.selected = selected
   },
@@ -69,6 +74,16 @@ export const mutations = {
   },
   updateAnnotation(state, payload) {
     const item = state.items[state.current].annotations.find(item => item.id === payload.id)
+    Object.assign(item, payload)
+  },
+  addComment(state, payload) {
+    state.items[state.current].comments.push(payload)
+  },
+  deleteComment(state, commentId) {
+    state.items[state.current].comments = state.items[state.current].comments.filter(item => item.id !== commentId)
+  },
+  updateComment(state, payload) {
+    const item = state.items[state.current].comments.find(item => item.id === payload.id)
     Object.assign(item, payload)
   },
   updateSearchOptions(state, payload) {
@@ -101,11 +116,22 @@ export const actions = {
         commit('setLoading', false)
       })
   },
+  assignDocumentsToMembers({ commit, dispatch }, data) {
+    commit('setLoading', true)
+    return DocumentService.assignDocumentsToMembers(data.projectId, { users: data.users })
+      .then((response) => {
+        dispatch('getDocumentList', data)
+      })
+      .finally(() => {
+        commit('setLoading', false)
+      })
+  },
   uploadDocument({ commit, dispatch }, data) {
     commit('setLoading', true)
     const formData = new FormData()
     formData.append('file', data.file)
     formData.append('format', data.format)
+    formData.append('ignore_existing', data.ignore_existing)
     const config = {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -158,6 +184,16 @@ export const actions = {
     }
     commit('resetSelected')
   },
+  deleteAllDocuments({ commit, state }, projectId) {
+    ProjectService.deleteAllDocuments(projectId)
+      .then((response) => {
+        commit('cleanDocuments')
+      })
+      .catch((error) => {
+        alert(error)
+      })
+    commit('resetSelected')
+  },
   addAnnotation({ commit, state }, payload) {
     const documentId = state.items[state.current].id
     AnnotationService.addAnnotation(payload.projectId, documentId, payload)
@@ -188,6 +224,37 @@ export const actions = {
         alert(error)
       })
   },
+  addComment({ commit, state }, payload) {
+    const documentId = state.items[state.current].id
+    DocumentService.addComment(payload.projectId, documentId, payload)
+      .then((response) => {
+        commit('addComment', response.data)
+      })
+      .catch((error) => {
+        alert(error)
+      })
+  },
+  updateComment({ commit, state }, payload) {
+    const documentId = state.items[state.current].id
+    DocumentService.updateComment(payload.projectId, documentId, payload.commentId, payload)
+      .then((response) => {
+        commit('updateComment', response.data)
+      })
+      .catch((error) => {
+        alert(error)
+      })
+  },
+  deleteComment({ commit, state }, payload) {
+    const documentId = state.items[state.current].id
+    DocumentService.deleteComment(payload.projectId, documentId, payload.commentId)
+      .then((response) => {
+        commit('deleteComment', payload.commentId)
+      })
+      .catch((error) => {
+        alert(error)
+      })
+  },
+
   approve({ commit, getters }, payload) {
     const documentId = getters.currentDoc.id
     const data = {

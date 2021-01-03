@@ -30,6 +30,12 @@ class ProjectAdminMixin(UserPassesTestMixin):
             project_id=self.kwargs['project_id'],
         )
 
+class IsOwnComment(ProjectMixin, BasePermission):
+    @classmethod
+    def has_object_permission(cls, request, view, obj):
+        if request.user.id==obj.user.id:
+            return True
+
 
 class IsOwnAnnotation(ProjectMixin, BasePermission):
 

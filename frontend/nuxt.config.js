@@ -14,7 +14,7 @@ export default {
       { hid: 'description', name: 'description', content: process.env.npm_package_description || '' }
     ],
     script: [
-      { src: 'https://use.fontawesome.com/releases/v5.0.6/js/all.js' }
+      { src: 'https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.1/js/all.js' }
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
@@ -41,15 +41,15 @@ export default {
   /*
   ** Global CSS
   */
-  css: [
-  ],
+  css: [{ src: '~/assets/style/app.scss', lang: 'scss' }],
   /*
   ** Plugins to load before mounting the App
   */
   plugins: [
     '~/plugins/filters.js',
     '~/plugins/vue-youtube.js',
-    '~/plugins/vue-shortkey.js'
+    '~/plugins/vue-shortkey.js',
+    '~/plugins/vue-dateformat.js'
   ],
   /*
   ** Nuxt.js modules
@@ -58,9 +58,14 @@ export default {
     '@nuxtjs/vuetify',
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
-    '@nuxtjs/eslint-module'
+    '@nuxtjs/eslint-module',
+    '@nuxtjs/style-resources'
   ],
-
+  styleResources: {
+    scss: './assets/**/variables.scss',
+    styl: '~assets/**/*.styl'
+    // sass: ... 需要什么配置什么，这里是全局的
+  },
   buildModules: [
     ['@nuxtjs/google-analytics', {
       id: 'UA-125643874-2'

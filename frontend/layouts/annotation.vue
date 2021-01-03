@@ -27,13 +27,20 @@
           no-gutters
           class="d-none d-sm-flex"
         >
-          <v-col>
+          <v-col cols="3">
             <approve-button
               :approved="approved"
               :disabled="currentDoc ? false : true"
             />
             <filter-button />
+            <approved-filter />
             <guideline-button />
+          </v-col>
+          <v-col cols="3">
+            <person-button />
+          </v-col>
+          <v-col cols="3">
+            <search-document-input />
           </v-col>
           <v-spacer />
           <v-col>
@@ -50,6 +57,9 @@
               :metadata="JSON.parse(currentDoc.meta)"
             />
           </v-col>
+          <v-col cols="12">
+            <comment-form />
+          </v-col>
         </v-row>
       </v-container>
     </v-content>
@@ -62,12 +72,16 @@
 import { mapActions, mapGetters, mapState } from 'vuex'
 import BottomNavigator from '@/components/containers/annotation/BottomNavigator'
 import GuidelineButton from '@/components/containers/annotation/GuidelineButton'
+import PersonButton from '@/components/containers/annotation/PersonButton'
 import MetadataBox from '@/components/organisms/annotation/MetadataBox'
 import FilterButton from '@/components/containers/annotation/FilterButton'
+import ApprovedFilter from '@/components/containers/annotation/ApprovedFilter'
 import ApproveButton from '@/components/containers/annotation/ApproveButton'
+import SearchDocumentInput from '@/components/containers/annotation/SearchDocumentInput'
 import Paginator from '~/components/containers/annotation/Paginator'
 import TheHeader from '~/components/organisms/layout/TheHeader'
 import TheSideBar from '~/components/organisms/layout/TheSideBar'
+import CommentForm from '~/components/organisms/annotation/CommentForm'
 
 export default {
   middleware: ['check-auth', 'auth'],
@@ -79,8 +93,12 @@ export default {
     Paginator,
     GuidelineButton,
     FilterButton,
+    PersonButton,
     ApproveButton,
-    MetadataBox
+    MetadataBox,
+    ApprovedFilter,
+    SearchDocumentInput,
+    CommentForm
   },
   data() {
     return {

@@ -73,6 +73,12 @@ export default {
           sortable: false
         },
         {
+          text: 'Assign To',
+          align: 'left',
+          value: 'annotation_assign_to',
+          sortable: false
+        },
+        {
           text: 'Action',
           align: 'left',
           value: 'action',

@@ -55,5 +55,11 @@ export const actions = {
   initPage({ commit }, payload) {
     commit('setProjectId', payload.projectId)
     commit('loadPage')
+  },
+  resetPage({ commit }, payload) {
+    //  reset 1st page
+    commit('setProjectId', payload.projectId)
+    commit('updatePage', 1)
+    commit('savePage')
   }
 }

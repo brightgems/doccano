@@ -2,6 +2,9 @@
   <editor
     v-if="current"
     v-model="editorText"
+    :options=" {
+      hideModeSwitch: true
+    }"
     preview-style="vertical"
     height="inherit"
   />

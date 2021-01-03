@@ -21,6 +21,10 @@ class ProjectService {
     return this.request.delete(`/projects/${projectId}`)
   }
 
+  deleteAllDocuments(projectId) {
+    return this.request.post(`/projects/${projectId}/delete_all_documents`)
+  }
+
   fetchProjectById(projectId) {
     return this.request.get(`/projects/${projectId}`)
   }

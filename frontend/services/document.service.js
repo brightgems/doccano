@@ -5,8 +5,8 @@ class DocumentService {
     this.request = ApiService
   }
 
-  getDocumentList({ projectId, limit, offset, q = '', isChecked = '', filterName = '' }) {
-    return this.request.get(`/projects/${projectId}/docs?limit=${limit}&offset=${offset}&q=${q}&${filterName}=${isChecked}`)
+  getDocumentList({ projectId, limit, offset, q = '', isChecked = '', filterName = '', assignedTo = '', approved = '' }) {
+    return this.request.get(`/projects/${projectId}/docs?limit=${limit}&offset=${offset}&q=${q}&${filterName}=${isChecked}&assigned_to=${assignedTo}&approved=${approved}`)
   }
 
   addDocument(projectId, payload) {
@@ -23,6 +23,10 @@ class DocumentService {
 
   uploadFile(projectId, payload, config = {}) {
     return this.request.post(`/projects/${projectId}/docs/upload`, payload, config)
+  }
+
+  assignDocumentsToMembers(projectId, payload) {
+    return this.request.post(`/projects/${projectId}/docs/doc_assign_to`, payload)
   }
 
   exportFile(projectId, format) {
@@ -46,6 +50,22 @@ class DocumentService {
 
   approveDocument(projectId, docId, payload) {
     return this.request.post(`/projects/${projectId}/docs/${docId}/approve-labels`, payload)
+  }
+
+  getCommentList(projectId, docId) {
+    return this.request.get(`/projects/${projectId}/docs/${docId}/comments`)
+  }
+
+  addComment(projectId, docId, payload) {
+    return this.request.post(`/projects/${projectId}/docs/${docId}/comments`, payload)
+  }
+
+  deleteComment(projectId, docId, commentId) {
+    return this.request.delete(`/projects/${projectId}/docs/${docId}/comments/${commentId}`)
+  }
+
+  updateComment(projectId, docId, commentId, payload) {
+    return this.request.put(`/projects/${projectId}/docs/${docId}/comments/${commentId}`, payload)
   }
 }
 

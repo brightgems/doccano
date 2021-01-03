@@ -247,7 +247,7 @@ REST_FRAMEWORK = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
@@ -273,6 +273,9 @@ DATABASES['default'].update(dj_database_url.config(
 
 # work-around for dj-database-url: explicitly disable ssl for sqlite
 if DATABASES['default'].get('ENGINE') == 'django.db.backends.sqlite3':
+    DATABASES['default'].get('OPTIONS', {}).pop('sslmode', None)
+
+if DATABASES['default'].get('ENGINE') == 'django.db.backends.postgresql_psycopg2':
     DATABASES['default'].get('OPTIONS', {}).pop('sslmode', None)
 
 # work-around for dj-database-url: patch ssl for mysql

@@ -15,9 +15,10 @@
         <v-icon v-else>
           mdi-close
         </v-icon>
+        Approve
       </v-btn>
     </template>
-    <span v-if="approved">Checked</span>
+    <span v-if="approved">Approve</span>
     <span v-else>Not checked</span>
   </v-tooltip>
 </template>

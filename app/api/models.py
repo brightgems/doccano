@@ -1,6 +1,8 @@
 import string
+import hashlib
 
 from django.db import models
+from django_postgres_extensions.models.fields import JSONField
 from django.dispatch import receiver
 from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
@@ -216,14 +218,28 @@ class Label(models.Model):
 
 class Document(models.Model):
     text = models.TextField()
+    text_md5 = models.CharField(max_length=32, editable=False)
     project = models.ForeignKey(Project, related_name='documents', on_delete=models.CASCADE)
     meta = models.TextField(default='{}')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    annotations_approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    annotations_approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='approved_by')
+    annotations_assign_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assign_to')
 
     def __str__(self):
         return self.text[:50]
+
+    def save(self, *args, **kwargs):
+        self.text_md5 = hashlib.md5(self.text.encode('utf-8')).hexdigest()
+        super(Document, self).save(*args, **kwargs)
+
+
+class Comment(models.Model):
+    text = models.TextField()
+    document = models.ForeignKey(Document, related_name='comments', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class Annotation(models.Model):
@@ -306,6 +322,47 @@ class RoleMapping(models.Model):
     class Meta:
         unique_together = ("user", "project", "role")
 
+
+class ModelBackend(models.Model):
+    """supprted backend for active learning"""
+    name = models.TextField()
+    model_type = models.CharField(max_length=30, choices=PROJECT_CHOICES)
+    config_file = models.TextField()
+
+    @classmethod
+    def initialize_data(cls):
+        """
+        support 3 types of models: seq label, text classify, seq2seq
+        """
+        MODELS = [
+            ('crf', 'SequenceLabeling', 'al_seqlabel_crf.yaml')
+        ]
+        for row in MODELS:
+            if ModelBackend.objects.filter(name=row[0]).exists():
+                continue
+            obj = ModelBackend(name=row[0], model_type=row[1], config_file=row[2])
+            obj.save()
+
+class ModelProject(models.Model):
+    """created models for active learning"""
+    name = models.TextField()
+    description = models.TextField()
+    model_type = models.CharField(max_length=30, choices=PROJECT_CHOICES)
+    model_backend = models.ForeignKey(ModelBackend, related_name='model_projects', on_delete=models.CASCADE)
+    target_project = models.ForeignKey(Project, related_name='model_projects', on_delete=models.PROTECT)
+    predict_labels = JSONField(null=False)
+    backend_parameters= JSONField(null=True, blank=True)
+    # current version name of the model
+    model_version = models.CharField(max_length=255, blank=True, default='')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+
+# class ModelTrainLog(models.Model):
+#     project = models.ForeignKey(Project, related_name='model_project', on_delete=models.CASCADE)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     message  = models.TextField
 
 @receiver(post_save, sender=RoleMapping)
 def add_linked_project(sender, instance, created, **kwargs):

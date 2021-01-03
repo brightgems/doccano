@@ -40,11 +40,34 @@ export const fileFormatRules = [
 
 export const uploadFileRules = [
   v => !!v || 'File is required',
-  v => !v || v.size < 1000000 || 'File size should be less than 1 MB!'
+  v => !v || v.size < 50000000 || 'File size should be less than 10 MB!'
 ]
 
 // Rules for user.
 export const passwordRules = [
   v => !!v || 'Password is required',
   v => (v && v.length <= 30) || 'Password must be less than 30 characters'
+]
+
+// Rules for models
+
+export const modelNameRules = [
+  v => !!v || 'Project name is required',
+  v => (v && v.length <= 30) || 'Model name must be less than 30 characters'
+]
+
+export const sourceProjectRules = [
+  v => !!v || 'Source project is required'
+]
+
+export const modelTypeRules = [
+  v => !!v || 'Model Type is required'
+]
+
+export const modelLabelRules = [
+  v => !!v || 'Labels is required'
+]
+
+export const modelBackendRules = [
+  v => !!v || 'Model Backend is required'
 ]

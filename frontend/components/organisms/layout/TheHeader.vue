@@ -36,6 +36,13 @@
     >
       Projects
     </v-btn>
+    <v-btn
+      v-if="isAuthenticated"
+      @click="$router.push('/models')"
+      text
+    >
+      Models
+    </v-btn>
     <v-menu
       v-if="!isAuthenticated"
       open-on-hover

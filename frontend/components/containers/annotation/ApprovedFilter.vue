@@ -1,0 +1,86 @@
+<template>
+  <v-menu>
+    <template v-slot:activator="{ on: menu }">
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on: tooltip }">
+          <v-btn
+            v-on="{ ...tooltip, ...menu }"
+            class="text-capitalize ps-1 pe-1"
+            min-width="36"
+            outlined
+          >
+            <v-icon>
+              mdi-filter
+            </v-icon>
+            Approved
+          </v-btn>
+        </template>
+        <span>Approved</span>
+      </v-tooltip>
+    </template>
+    <v-list>
+      <v-list-item-group v-model="selected">
+        <v-list-item
+          v-for="(item, i) in items"
+          :key="i"
+        >
+          <v-list-item-icon>
+            <v-icon v-if="selected === i">
+              mdi-check
+            </v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>
+              {{ item.title }}
+            </v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list-item-group>
+    </v-list>
+  </v-menu>
+</template>
+
+<script>
+import { mapMutations, mapActions, mapGetters } from 'vuex'
+
+export default {
+  data() {
+    return {
+      selected: 0,
+      items: [
+        { title: 'All', param: '' },
+        { title: 'Approved', param: 'true' },
+        { title: 'Unapproved', param: 'false' }
+      ]
+    }
+  },
+
+  computed: {
+    ...mapGetters('projects', ['getFilterOption'])
+  },
+
+  watch: {
+    selected() {
+      this.updateSearchOptions({
+        approved: this.items[this.selected].param
+      })
+      this.getDocumentList({
+        projectId: this.$route.params.id
+      })
+      this.setCurrent(0)
+      const checkpoint = {}
+      checkpoint[this.$route.params.id] = this.page
+      localStorage.setItem('checkpoint', JSON.stringify(checkpoint))
+    }
+  },
+
+  created() {
+    this.initSearchOptions()
+  },
+
+  methods: {
+    ...mapActions('documents', ['getDocumentList']),
+    ...mapMutations('documents', ['setCurrent', 'updateSearchOptions', 'initSearchOptions'])
+  }
+}
+</script>

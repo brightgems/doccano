@@ -87,7 +87,6 @@ export default {
       descriptionRules
     }
   },
-
   methods: {
     cancel() {
       this.$emit('close')

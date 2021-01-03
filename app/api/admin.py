@@ -4,6 +4,7 @@ from .models import Label, Document, Project
 from .models import Role, RoleMapping
 from .models import DocumentAnnotation, SequenceAnnotation, Seq2seqAnnotation
 from .models import TextClassificationProject, SequenceLabelingProject, Seq2seqProject
+from .models import ModelBackend, ModelProject
 
 
 class LabelAdmin(admin.ModelAdmin):
@@ -13,9 +14,9 @@ class LabelAdmin(admin.ModelAdmin):
 
 
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ('text', 'project', 'meta')
+    list_display = ('text', 'project', 'meta','annotations_assign_to')
     ordering = ('project',)
-    search_fields = ('project',)
+    search_fields = ('project','annotations_assign_to')
 
 
 class ProjectAdmin(admin.ModelAdmin):
@@ -53,6 +54,15 @@ class RoleMappingAdmin(admin.ModelAdmin):
     ordering = ('user',)
     search_fields = ('user',)
 
+class ModelBackendAdmin(admin.ModelAdmin):
+    list_display = ('name', 'model_type')
+    ordering = ('name',)
+    search_fields = ('name',)
+
+class ModelProjectAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'model_type')
+    ordering = ('name',)
+    search_fields = ('name',)
 
 admin.site.register(DocumentAnnotation, DocumentAnnotationAdmin)
 admin.site.register(SequenceAnnotation, SequenceAnnotationAdmin)
@@ -65,3 +75,5 @@ admin.site.register(SequenceLabelingProject, ProjectAdmin)
 admin.site.register(Seq2seqProject, ProjectAdmin)
 admin.site.register(Role, RoleAdmin)
 admin.site.register(RoleMapping, RoleMappingAdmin)
+admin.site.register(ModelBackend, ModelBackendAdmin)
+admin.site.register(ModelProject, ModelProjectAdmin)
