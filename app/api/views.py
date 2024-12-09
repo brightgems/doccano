@@ -352,7 +352,7 @@ class TextDownloadAPI(APIView):
     def get(self, request, *args, **kwargs):
         format = request.query_params.get('q')
         project = get_object_or_404(Project, pk=self.kwargs['project_id'])
-        documents = project.documents.all()
+        documents = project.documents.order_by('id').all()
         painter = self.select_painter(format)
         # json1 format prints text labels while json format prints annotations with label ids
         # json1 format - "labels": [[0, 15, "PERSON"], ..]
